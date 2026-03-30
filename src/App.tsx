@@ -2,11 +2,17 @@ import { useState, useCallback, type FormEvent } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search } from 'lucide-react'
+import { LoaderCircle, Moon, Search, Sun, TriangleAlert } from 'lucide-react'
+import { useWeather } from '@/hooks/useWeather'
+import { useDarkMode } from '@/hooks/useDarkMode'
+import { WeatherDisplay } from '@/components/WeatherDisplay'
 
 export default function App() {
   const [inputValue, setInputValue] = useState('')
   const [searchedCity, setSearchedCity] = useState<string | null>(null)
+
+  const { data, loading, error } = useWeather(searchedCity)
+  const { isDark, toggle } = useDarkMode()
 
   const handleSubmit = useCallback(
     (e: FormEvent<HTMLFormElement>) => {
@@ -20,8 +26,8 @@ export default function App() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex flex-col">
-      {/* Skip-navigation link for keyboard/screen-reader users (WCAG 2.4.1) */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-slate-950 dark:to-slate-900 flex flex-col transition-colors duration-300">
+      {/* Skip-navigation link (WCAG 2.4.1) */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -30,12 +36,23 @@ export default function App() {
       </a>
 
       {/* Header */}
-      <header className="w-full bg-white border-b border-blue-100 shadow-sm">
+      <header className="w-full bg-white dark:bg-slate-900 border-b border-blue-100 dark:border-slate-700 shadow-sm transition-colors duration-300">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-3">
-          <Search className="h-6 w-6 text-blue-500 flex-shrink-0" aria-hidden="true" />
-          <h1 className="text-xl sm:text-2xl font-bold text-blue-700 tracking-tight">
+          <Search className="h-6 w-6 text-blue-500 dark:text-blue-400 flex-shrink-0" aria-hidden="true" />
+          <h1 className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300 tracking-tight flex-1">
             My Weather App
           </h1>
+          <button
+            onClick={toggle}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="rounded-full p-2 text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          >
+            {isDark ? (
+              <Sun className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Moon className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
         </div>
       </header>
 
@@ -46,7 +63,7 @@ export default function App() {
         aria-label="Weather search"
       >
         {/* Search card */}
-        <Card className="w-full max-w-xl rounded-2xl shadow-md border-blue-100">
+        <Card className="w-full max-w-xl rounded-2xl shadow-md border-blue-100 dark:border-slate-700 transition-colors duration-300">
           <CardContent className="pt-6 pb-6 px-6">
             <form
               onSubmit={handleSubmit}
@@ -62,16 +79,18 @@ export default function App() {
                 type="text"
                 placeholder="Enter a city name…"
                 value={inputValue}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setInputValue(e.target.value)
+                }
                 aria-required="true"
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
-                className="flex-1 rounded-xl border-blue-200 focus-visible:ring-blue-400 placeholder:text-blue-300 text-blue-900"
+                className="flex-1 rounded-xl border-blue-200 dark:border-slate-600 focus-visible:ring-blue-400 placeholder:text-blue-300 dark:placeholder:text-slate-500 text-blue-900 dark:text-slate-100 transition-colors duration-200"
               />
               <Button
                 type="submit"
-                disabled={!inputValue.trim()}
+                disabled={!inputValue.trim() || loading}
                 aria-label="Search weather for entered city"
                 className="rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold px-6 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -82,33 +101,54 @@ export default function App() {
           </CardContent>
         </Card>
 
-        {/* Result — only shown after a search */}
+        {/* Result section */}
         {searchedCity !== null && (
           <section
             aria-live="polite"
             aria-atomic="true"
-            aria-label="Search result"
+            aria-label="Weather results"
             className="mt-6 w-full max-w-xl"
           >
-            <Card className="rounded-2xl shadow-md border-blue-100">
-              <CardContent className="pt-6 pb-6 px-6">
-                <p className="text-sm font-medium text-blue-400 uppercase tracking-widest mb-1">
-                  City
-                </p>
-                <p className="text-3xl sm:text-4xl font-bold text-blue-700">
-                  {searchedCity}
-                </p>
-                <p className="mt-2 text-sm text-blue-400">
-                  Weather data will appear here in a future update.
-                </p>
-              </CardContent>
-            </Card>
+            {loading && (
+              <div className="flex items-center justify-center gap-2 py-12 text-blue-400 dark:text-blue-300">
+                <LoaderCircle
+                  className="h-6 w-6 animate-spin"
+                  aria-hidden="true"
+                />
+                <span>Loading weather…</span>
+              </div>
+            )}
+
+            {error && (
+              <Card className="rounded-2xl shadow-md border-red-100 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 transition-colors duration-300">
+                <CardContent className="pt-6 pb-6 px-6 flex items-start gap-3">
+                  <TriangleAlert
+                    className="h-5 w-5 text-red-400 dark:text-red-400 flex-shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <p className="font-semibold text-red-700 dark:text-red-300">
+                      {error.kind === 'not_found'
+                        ? `City "${searchedCity}" not found`
+                        : 'Could not load weather'}
+                    </p>
+                    <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                      {error.kind === 'not_found'
+                        ? 'Check the spelling and try again.'
+                        : 'Check your connection and try again.'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {data && <WeatherDisplay data={data} />}
           </section>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-4 text-xs text-blue-300">
+      <footer className="text-center py-4 text-xs text-blue-300 dark:text-slate-600 transition-colors duration-300">
         My Weather App &copy; {new Date().getFullYear()}
       </footer>
     </div>
