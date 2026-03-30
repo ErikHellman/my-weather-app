@@ -47,7 +47,7 @@ export default function App() {
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-3">
             <Search className="h-6 w-6 text-white/80 flex-shrink-0" aria-hidden="true" />
             <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex-1">
-              My Weather App
+              My Awesome Weather App
             </h1>
             <button
               onClick={toggle}
@@ -156,7 +156,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="text-center py-4 text-xs text-white/40 transition-colors duration-300">
-          My Weather App &copy; {new Date().getFullYear()}
+          My Awesome Weather App &copy; {new Date().getFullYear()}
         </footer>
       </div>
     </div>
