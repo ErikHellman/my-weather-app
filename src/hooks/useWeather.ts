@@ -80,7 +80,7 @@ export function useWeather(city: string | null): WeatherState {
   return state
 }
 
-function aggregateForecast(entries: ForecastEntry[]): DayForecast[] {
+export function aggregateForecast(entries: ForecastEntry[]): DayForecast[] {
   const byDate = new Map<string, ForecastEntry[]>()
 
   for (const entry of entries) {
